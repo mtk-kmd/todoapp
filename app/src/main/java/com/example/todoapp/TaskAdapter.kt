@@ -9,7 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class TaskAdapter(
     private val tasks: MutableList<Task>,
-    private val onDelete: (Task) -> Unit
+    private val onDelete: (Task) -> Unit,
+    private val databaseHelper: DatabaseHelper
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     // ViewHolder class to hold views for each item
@@ -28,12 +29,26 @@ class TaskAdapter(
     // Binds data to the views in the ViewHolder
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
         val task = tasks[position]
-        holder.textViewName.text = task.name // Set task name
+        holder.textViewName.text = task.name
+
+        // Change text style based on completion status
+        holder.textViewName.paint.isStrikeThruText = task.isCompleted
 
         // Set up delete button listener
         holder.buttonDelete.setOnClickListener {
-            onDelete(task) // Call the delete function passed from MainActivity
+            onDelete(task)
         }
+
+        // Handle toggle completion status
+        holder.itemView.setOnClickListener {
+            task.isCompleted = !task.isCompleted // Toggle completion
+            updateTaskInDb(task) // Call updateTaskInDb directly
+            notifyItemChanged(position) // Notify adapter of change
+        }
+    }
+
+    private fun updateTaskInDb(task: Task) {
+        databaseHelper.updateTask(task) // Update task in database
     }
 
     // Returns the total number of items in the list
